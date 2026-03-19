@@ -361,18 +361,24 @@
           <line id="sub1Hand" x1="0" y1="0" x2="0" y2="-32" class="sub-hand" />
           <g id="sub1Labels"></g>
           <g id="sub1Ticks"></g>
+          <circle r="2" class="hub"></circle>
         </g>
 
         <g id="subDial2" class="sub-dial" transform="translate(-85,0)">
           <circle r="50"></circle>
+          <!-- 24と12を貫く線（中心ハブr=2を避けるために -4～4 を空白に） -->
+          <line x1="0" y1="-34" x2="0" y2="-4" class="sub-tick" />
+          <line x1="0" y1="4" x2="0" y2="34" class="sub-tick" />
           <line id="sub2Hand" x1="0" y1="0" x2="0" y2="-32" class="sub-hand" />
           <g id="sub2Labels"></g>
+          <circle r="2" class="hub"></circle>
         </g>
 
         <g id="subDial3" class="sub-dial" transform="translate(0,85)">
           <circle r="50"></circle>
           <line id="sub3Hand" x1="0" y1="0" x2="0" y2="-32" class="sub-hand" />
           <g id="sub3Labels"></g>
+          <circle r="2" class="hub"></circle>
         </g>
 
         <g id="brandLogo1" transform="translate(92,-40)">
@@ -586,8 +592,8 @@
       }
 
       const sub2Labels = document.getElementById('sub2Labels');
-      const r2 = 32;
-      [{ x: r2, y: 0, text: 'A' }, { x: 0, y: r2, text: '12' }, { x: -r2, y: 0, text: 'P' }, { x: 0, y: -r2, text: '24' }].forEach(p => {
+      const r2 = 40;
+      [{ x: r2, y: 0, text: 'A' }, { x: 0, y: r2 + 2, text: '12' }, { x: -r2, y: 0, text: 'P' }, { x: 0, y: -r2, text: '24' }].forEach(p => {
         const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
         t.setAttribute("x", p.x); t.setAttribute("y", p.y);
         t.setAttribute("class", "sub-label");
