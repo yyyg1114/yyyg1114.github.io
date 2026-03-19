@@ -118,6 +118,12 @@
       stroke-width: 3
     }
 
+    .ticks .fifth {
+      stroke: #cfe7ef;
+      stroke-opacity: 0.6;
+      stroke-width: 1.2
+    }
+
     .label {
       font-size: 25px;
       fill: #dff4f8;
@@ -506,12 +512,25 @@
     }
 
 
-    // 内側目盛り
-    for (let i = 0; i < 60; i++) {
-      const angle = (i / 60) * 360;
+    // 内側目盛り（300分割: major=5秒, minor=1秒, fifth=1/5秒）
+    for (let i = 0; i < 300; i++) {
+      const angle = (i / 300) * 360;
       const rad = angle * Math.PI / 180;
-      const rOut = 190;
-      const rIn = (i % 5 === 0 ? 170 : 180);
+      const rOut = 195;
+      let rIn, cls;
+      if (i % 25 === 0) {
+        // 5秒ごと（major）
+        rIn = 175;
+        cls = 'major';
+      } else if (i % 5 === 0) {
+        // 1秒ごと（minor）
+        rIn = 180;
+        cls = 'minor';
+      } else {
+        // 1/5秒ごと（fifth）
+        rIn = 185;
+        cls = 'fifth';
+      }
       const x1 = Math.sin(rad) * rIn;
       const y1 = -Math.cos(rad) * rIn;
       const x2 = Math.sin(rad) * rOut;
@@ -521,15 +540,16 @@
       line.setAttribute('y1', y1);
       line.setAttribute('x2', x2);
       line.setAttribute('y2', y2);
-      line.setAttribute('class', (i % 5 === 0) ? 'major' : 'minor');
+      line.setAttribute('class', cls);
       innerTicks.appendChild(line);
 
-      if (i % 5 === 0) {
+      if (i % 25 === 0) {
+        const secVal = i / 5;
         const lr = 204;
         const lx = Math.sin(rad) * lr;
         const ly = -Math.cos(rad) * lr;
         const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        t.textContent = (i === 0 ? '60' : i < 10 ? '0' + i : i);
+        t.textContent = (secVal === 0 ? '60' : secVal < 10 ? '0' + secVal : secVal);
         t.setAttribute('x', lx);
         t.setAttribute('y', ly);
         t.setAttribute('class', 'outer-label');
