@@ -300,7 +300,7 @@
             <g id="subTop" transform="translate(320,190)" class="sub-dial">
                 <circle r="65" />
                 <g class="sub-ticks" id="ticksTop"></g>
-                <text y="-50" id="labelTop" class="sub-label">MIN</text>
+                <text y="-20" id="labelTop" class="sub-label">MIN</text>
                 <line id="handSubTop" x1="0" y1="0" x2="0" y2="-52" class="hand hand-sub" />
                 <circle r="4" fill="#fff" />
             </g>
@@ -402,7 +402,7 @@
             const subdialTickConfigs = [
                 { id: 'ticksTop', count: 60, interval: 5 },
                 { id: 'ticksRight', count: 24, interval: 1 },
-                { id: 'ticksBottom', count: 60, interval: 5 }
+                { id: 'ticksBottom', count: 10, interval: 5 }
             ];
             subdialTickConfigs.forEach(conf => {
                 const g = document.getElementById(conf.id);
@@ -414,12 +414,14 @@
                     l.setAttribute('y1', Math.sin(a) * (major ? 52 : 58));
                     l.setAttribute('x2', Math.cos(a) * 65);
                     l.setAttribute('y2', Math.sin(a) * 65);
-                    l.setAttribute('stroke', major ? '#fff' : '#444');
+                    l.setAttribute('stroke', major ? '#fff' : '#ccc');
                     g.appendChild(l);
 
                     let showLabel = false;
                     if (conf.id === 'ticksTop') showLabel = (i % 10 === 0);
                     if (conf.id === 'ticksRight') showLabel = [0, 6, 12, 18].includes(i);
+                    if (conf.id === 'ticksBottom') showLabel = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].includes(i);
+
 
                     if (showLabel) {
                         const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -560,20 +562,28 @@
         }
 
         const pressState = {};
-        ['btnA', 'btnB', 'btnC', 'btnD'].forEach(id => {
+        ['btnA', 'btnB', 'btnC', 'btnD', 'btnE'].forEach(id => {
             pressState[id] = { timer: null, isLong: false };
         });
 
         function handlePress(btnId, isLong) {
             if (isLong) {
-                // Jump to TME on long press of A or B
-                if (btnId === 'btnA' || btnId === 'btnB') {
+                // TME Jump on long press of A only
+                if (btnId === 'btnA') {
                     state.mode = 'TME';
+                    return;
+                }
+                // Week Number on long press of E
+                if (btnId === 'btnE') {
+                    state.showWeek = !state.showWeek;
+                    state.showCalendar = false;
+                    updateCalendar();
+                    return;
                 }
                 return;
             }
 
-            // Mode Switching (A: Next, B: Previous)
+            // Mode Switching (A/B)
             if (btnId === 'btnA') {
                 const idx = config.modes.indexOf(state.mode);
                 state.mode = config.modes[(idx + 1) % config.modes.length];
@@ -581,6 +591,22 @@
             if (btnId === 'btnB') {
                 const idx = config.modes.indexOf(state.mode);
                 state.mode = config.modes[(idx - 1 + config.modes.length) % config.modes.length];
+            }
+
+            // Quick SW from TME
+            if (btnId === 'btnC' && state.mode === 'TME') {
+                state.mode = 'SW';
+                state.sw.running = true;
+                state.sw.startTime = Date.now();
+                return;
+            }
+
+            // Calendar Toggle (E)
+            if (btnId === 'btnE') {
+                state.showCalendar = !state.showCalendar;
+                state.showWeek = false;
+                updateCalendar();
+                return;
             }
 
             // Action / Set Buttons (C & D - Right side)
@@ -635,8 +661,9 @@
             pressState[id].isLong = false;
         }
 
-        ['btnA', 'btnB', 'btnC', 'btnD'].forEach(id => {
+        ['btnA', 'btnB', 'btnC', 'btnD', 'btnE'].forEach(id => {
             const el = document.getElementById(id);
+            if (!el) return;
             el.addEventListener('mousedown', (e) => { e.preventDefault(); startPress(id); });
             el.addEventListener('mouseup', (e) => { e.preventDefault(); endPress(id); });
             el.addEventListener('mouseleave', (e) => { e.preventDefault(); clearTimeout(pressState[id].timer); });
@@ -653,6 +680,7 @@
             if (k === 'b') handlePress('btnB', false);
             if (k === 'c') handlePress('btnC', false);
             if (k === 'd') handlePress('btnD', false);
+            if (k === 'e') handlePress('btnE', false);
         });
 
         init();
