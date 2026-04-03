@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cronosurf Wave Clone - Professional Chronograph</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --accent-color: #39FF14;
+            --secondary-accent: #00CC00;
+            --text-color: #ffffff;
+            --size: min(95vw, 850px);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .watch-container {
+            position: relative;
+            width: var(--size);
+            height: var(--size);
+            user-select: none;
+            touch-action: none;
+        }
+
+        #clockSVG {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.9));
+        }
+
+        .tick {
+            stroke: #fff;
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+
+        .tick-minor {
+            stroke: #666;
+            stroke-width: 1.5;
+        }
+
+        .tick-sub {
+            stroke: var(--accent-color);
+            stroke-width: 1.5;
+            opacity: 0.6;
+        }
+
+        .hand {
+            stroke-linecap: round;
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
+        }
+
+        .hand-hour {
+            stroke: #f0f0f0;
+            stroke-width: 10;
+        }
+
+        .hand-minute {
+            stroke: #f0f0f0;
+            stroke-width: 6;
+        }
+
+        .hand-second {
+            stroke: var(--accent-color);
+            stroke-width: 2.5;
+        }
+
+        .hand-sub {
+            stroke: #fff;
+            stroke-width: 3;
+        }
+
+        .sub-dial circle {
+            fill: rgba(0, 0, 0, 0.4);
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .sub-label {
+            font-size: 14px;
+            fill: #aaa;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-weight: 500;
+        }
+
+        .mode-label {
+            font-size: 16px;
+            fill: #555;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .mode-active {
+            fill: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .button-visual {
+            fill: #444;
+            stroke: #222;
+            transition: all 0.1s;
+        }
+
+        .pusher-visuals {
+            transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1);
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .button-container:active .pusher-visuals {
+            transform: translateX(-20px);
+        }
+
+        .button-area:hover+.button-visual {
+            fill: #555;
+        }
+
+        .calendar-ring-text {
+            font-size: 13px;
+            fill: #777;
+            font-weight: 500;
+        }
+
+        .calendar-highlight {
+            fill: var(--accent-color);
+            font-weight: 700;
+        }
+
+        #brand {
+            font-weight: 700;
+            letter-spacing: 3px;
+            fill: #fff;
+        }
+
+        #tagline {
+            font-weight: 300;
+            letter-spacing: 5px;
+            fill: var(--accent-color);
+            opacity: 0.8;
+        }
+
+        .status-on {
+            fill: var(--accent-color);
+        }
+
+        .status-off {
+            fill: #c00;
+        }
+
+        .controls-hint {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            gap: 20px;
+        }
+
+        .hint-key {
+            color: #888;
+            font-weight: bold;
+            border: 1px solid #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            49% {
+                opacity: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 0.1;
+            }
+        }
+
+        .blinking {
+            animation: blink 1.0s infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="watch-container">
+        <svg viewBox="0 0 640 640" id="clockSVG">
+            <defs>
+                <pattern id="carbon-texture" x="0" y="0" width="1" height="1">
+                    <image href="background.png" x="0" y="0" width="640" height="640"
+                        preserveAspectRatio="xMidYMid slice" opacity="0.6" />
+                </pattern>
+
+                <radialGradient id="bezel-grad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" style="stop-color:#555;stop-opacity:1" />
+                    <stop offset="90%" style="stop-color:#222;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#000;stop-opacity:1" />
+                </radialGradient>
+
+                <linearGradient id="metal-pushed-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#222;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#666;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#222;stop-opacity:1" />
+                </linearGradient>
+
+                <filter id="pusher-shadow">
+                    <feDropShadow dx="2" dy="5" stdDeviation="5" flood-opacity="0.5" />
+                </filter>
+            </defs>
+
+            <g id="case">
+                <circle cx="320" cy="320" r="300" fill="url(#bezel-grad)" stroke="#1a1a1a" stroke-width="4"
+                    filter="url(#pusher-shadow)" />
+                <circle cx="320" cy="320" r="261" fill="#111" />
+                <circle cx="320" cy="320" r="260" fill="url(#carbon-texture)" />
+
+                <!-- Push Button A (Top Left) -->
+                <g id="pusher-A" transform="rotate(305, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                    class="button-container">
+                    <g class="pusher-visuals">
+                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
+                        <rect x="5" y="5" width="5" height="30" fill="var(--accent-color)" opacity="0.8" />
+                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
+                        <text x="32" y="36" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
+                            transform="rotate(90, 32, 20)">A</text>
+                    </g>
+                    <circle cx="0" cy="20" r="40" class="button-area" id="btnA" style="fill:transparent;" />
+                </g>
+
+                <!-- Push Button B (Bottom Left) -->
+                <g id="pusher-B" transform="rotate(235, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                    class="button-container">
+                    <g class="pusher-visuals">
+                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
+                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
+                        <text x="32" y="36" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
+                            transform="rotate(90, 32, 20)">B</text>
+                    </g>
+                    <circle cx="0" cy="20" r="40" class="button-area" id="btnB" style="fill:transparent;" />
+                </g>
+
+                <!-- Push Button C (Top Right) -->
+                <g id="pusher-C" transform="rotate(55, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                    class="button-container">
+                    <g class="pusher-visuals">
+                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
+                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
+                        <text x="32" y="20" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
+                            transform="rotate(270, 32, 20)">C</text>
+                    </g>
+                    <circle cx="0" cy="20" r="40" class="button-area" id="btnC" style="fill:transparent;" />
+                </g>
+
+                <!-- Push Button D (Bottom Right) -->
+                <g id="pusher-D" transform="rotate(125, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                    class="button-container">
+                    <g class="pusher-visuals">
+                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
+                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
+                        <text x="32" y="20" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
+                            transform="rotate(270, 32, 20)">D</text>
+                    </g>
+                    <circle cx="0" cy="20" r="40" class="button-area" id="btnD" style="fill:transparent;" />
+                </g>
+            </g>
+
+            <g id="markers" transform="translate(320,320)"></g>
+
+            <g id="subTop" transform="translate(320,190)" class="sub-dial">
+                <circle r="65" />
+                <g class="sub-ticks" id="ticksTop"></g>
+                <text y="-50" id="labelTop" class="sub-label">MIN</text>
+                <line id="handSubTop" x1="0" y1="0" x2="0" y2="-52" class="hand hand-sub" />
+                <circle r="4" fill="#fff" />
+            </g>
+
+            <g id="subRight" transform="translate(450,320)" class="sub-dial">
+                <circle r="65" />
+                <g class="sub-ticks" id="ticksRight"></g>
+                <text y="-20" class="sub-label">24H</text>
+                <line id="handSubRight" x1="0" y1="0" x2="0" y2="-52" class="hand hand-sub" />
+                <circle r="4" fill="#fff" />
+            </g>
+
+            <g id="subBottom" transform="translate(320,450)" class="sub-dial">
+                <circle r="65" />
+                <g class="sub-ticks" id="ticksBottom"></g>
+                <text y="15" id="subBottomLabel" class="sub-label">SECONDS</text>
+                <text y="30" id="statusLabel" class="sub-label" font-weight="bold"></text>
+                <line id="handSubBottom" x1="0" y1="0" x2="0" y2="-52" class="hand hand-sub" />
+                <circle r="4" fill="#fff" />
+            </g>
+
+            <g id="subLeft" transform="translate(190,320)" class="sub-dial">
+                <circle r="65" />
+                <text x="0" y="-40" id="label-TME" class="sub-label mode-label">TME</text>
+                <text x="40" y="0" id="label-SW" class="sub-label mode-label" transform="rotate(90, 40, 0)">SW</text>
+                <text x="0" y="40" id="label-CD" class="sub-label mode-label">CD</text>
+                <text x="-40" y="0" id="label-AL" class="sub-label mode-label" transform="rotate(-90, -40, 0)">AL</text>
+                <text x="-28" y="-28" id="label-WT" class="sub-label mode-label"
+                    transform="rotate(-45, -28, -28)">WT</text>
+                <line id="handMode" x1="0" y1="0" x2="0" y2="-45" class="hand hand-second" stroke-width="3" />
+                <circle r="5" fill="#000" stroke="#fff" />
+            </g>
+
+            <g id="calendarRing" transform="translate(320,320)"></g>
+
+            <g transform="translate(320,320)">
+                <text id="brand" x="0" y="-45" font-size="22" text-anchor="middle">CRONOSURF</text>
+                <text id="tagline" x="0" y="-25" font-size="12" text-anchor="middle">WAVEMASTER</text>
+                <line id="handHour" x1="0" y1="0" x2="0" y2="-130" class="hand hand-hour" />
+                <line id="handMinute" x1="0" y1="0" x2="0" y2="-200" class="hand hand-minute" />
+                <line id="handSecond" x1="0" y1="0" x2="0" y2="-230" class="hand hand-second" />
+                <circle r="10" fill="#222" />
+                <circle r="5" fill="#f0f0f0" />
+            </g>
+        </svg>
+    </div>
+
+    <div class="controls-hint">
+        <div><span class="hint-key">A</span> [左上] START/STOP / SET+</div>
+        <div><span class="hint-key">B</span> [左下] RESET/SPLIT / SET-</div>
+        <div><span class="hint-key">C</span> [右上] MODE</div>
+        <div><span class="hint-key">D</span> [右下] ALARM ON/OFF / FLYBACK</div>
+    </div>
+
+    <script>
+        const state = {
+            mode: 'TME',
+            time: new Date(),
+            sw: { running: false, startTime: 0, elapsed: 0, splitTime: 0, splitting: false },
+            cd: { running: false, startTime: 0, duration: 600000, current: 600000 }, // 10 min
+            wt: { offset: 0 }, // 15min steps relative to local
+            al: { on: false, time: 7 * 3600000 }, // 7:00 AM
+            frame: 0
+        };
+
+        const config = {
+            modes: ['TME', 'SW', 'CD', 'AL', 'WT'],
+            modeAngles: { TME: 0, SW: 90, CD: 180, AL: 270, WT: 315 }
+        };
+
+        function init() {
+            const markers = document.getElementById('markers');
+            for (let i = 0; i < 300; i++) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                const rad = (i * 1.2 - 90) * Math.PI / 180;
+                let r1 = i % 25 === 0 ? 210 : (i % 5 === 0 ? 220 : 240);
+                let r2 = 255;
+                line.setAttribute('x1', Math.cos(rad) * r1);
+                line.setAttribute('y1', Math.sin(rad) * r1);
+                line.setAttribute('x2', Math.cos(rad) * r2);
+                line.setAttribute('y2', Math.sin(rad) * r2);
+                line.className.baseVal = i % 25 === 0 ? 'tick' : (i % 5 === 0 ? 'tick-minor' : 'tick-sub');
+                markers.appendChild(line);
+
+                if (i % 25 === 0) {
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    const rText = 185;
+                    text.setAttribute('x', Math.cos(rad) * rText);
+                    text.setAttribute('y', Math.sin(rad) * rText + 6);
+                    text.style.fontSize = '24px';
+                    text.style.fill = '#fff';
+                    text.style.fontWeight = '700';
+                    text.style.textAnchor = 'middle';
+                    text.textContent = i === 0 ? '12' : i / 25;
+                    markers.appendChild(text);
+                }
+            }
+
+            const subdialTickConfigs = [
+                { id: 'ticksTop', count: 60, interval: 5 },
+                { id: 'ticksRight', count: 24, interval: 1 },
+                { id: 'ticksBottom', count: 60, interval: 5 }
+            ];
+            subdialTickConfigs.forEach(conf => {
+                const g = document.getElementById(conf.id);
+                for (let i = 0; i < conf.count; i++) {
+                    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    const a = (i * (360 / conf.count) - 90) * Math.PI / 180;
+                    const major = i % conf.interval === 0;
+                    l.setAttribute('x1', Math.cos(a) * (major ? 52 : 58));
+                    l.setAttribute('y1', Math.sin(a) * (major ? 52 : 58));
+                    l.setAttribute('x2', Math.cos(a) * 65);
+                    l.setAttribute('y2', Math.sin(a) * 65);
+                    l.setAttribute('stroke', major ? '#fff' : '#444');
+                    g.appendChild(l);
+
+                    let showLabel = false;
+                    if (conf.id === 'ticksTop') showLabel = (i % 10 === 0);
+                    if (conf.id === 'ticksRight') showLabel = [0, 6, 12, 18].includes(i);
+
+                    if (showLabel) {
+                        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        const rT = 40;
+                        t.setAttribute('x', Math.cos(a) * rT);
+                        t.setAttribute('y', Math.sin(a) * rT + 4);
+                        t.className.baseVal = 'sub-label';
+                        t.textContent = i;
+                        g.appendChild(t);
+                    }
+                }
+            });
+
+            updateCalendar();
+            requestAnimationFrame(tick);
+        }
+
+        function updateCalendar() {
+            const ring = document.getElementById('calendarRing');
+            ring.innerHTML = '';
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysArr = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+            for (let i = 1; i <= 31; i++) {
+                const angle = (i / 31) * 360 - 90;
+                const rad = angle * Math.PI / 180;
+                const d = new Date(year, month, i);
+                const dayStr = daysArr[d.getDay()];
+                const r = 282;
+                const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                t.setAttribute('x', Math.cos(rad) * r);
+                t.setAttribute('y', Math.sin(rad) * r + 4);
+                t.setAttribute('transform', `rotate(${angle + 90}, ${Math.cos(rad) * r}, ${Math.sin(rad) * r})`);
+                t.className.baseVal = 'calendar-ring-text';
+                if (i === now.getDate()) t.classList.add('calendar-highlight');
+                if (i > daysInMonth) t.style.opacity = '0.1';
+                t.textContent = `${i} ${dayStr}`;
+                ring.appendChild(t);
+            }
+        }
+
+        function setHand(id, angle) {
+            document.getElementById(id).setAttribute('transform', `rotate(${angle})`);
+        }
+
+        function tick() {
+            const now = new Date();
+            const ms = now.getMilliseconds();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+
+            // Mode Indicator
+            setHand('handMode', config.modeAngles[state.mode]);
+            config.modes.forEach(mode => {
+                document.getElementById(`label-${mode}`).classList.toggle('mode-active', state.mode === mode);
+            });
+
+            if (state.mode === 'TME') {
+                const sAngle = (s + ms / 1000) * 6;
+                const mAngle = (m + s / 60) * 6;
+                const hAngle = ((h % 12) + m / 60) * 30;
+                setHand('handSecond', sAngle);
+                setHand('handMinute', mAngle);
+                setHand('handHour', hAngle);
+                setHand('handSubTop', mAngle);
+                setHand('handSubRight', (h + m / 60) * 15);
+                setHand('handSubBottom', sAngle);
+                document.getElementById('subBottomLabel').textContent = "SECONDS";
+                document.getElementById('statusLabel').textContent = "";
+            }
+
+            if (state.mode === 'SW') {
+                if (state.sw.running) state.sw.elapsed = Date.now() - state.sw.startTime;
+                const d = state.sw.splitting ? state.sw.splitTime : state.sw.elapsed;
+                const es = d / 1000;
+                setHand('handSecond', (es * 6) % 360);
+                setHand('handMinute', (d / 60000) * 6 % 360);
+                setHand('handHour', (d / 3600000) * 30 % 360);
+                // 1/2s subdial
+                setHand('handSubBottom', (d % 1000) / 1000 * 20 * 36);
+                document.getElementById('subBottomLabel').textContent = "1/2 SEC";
+                const statusEl = document.getElementById('statusLabel');
+                statusEl.textContent = state.sw.splitting ? "SPLIT" : "";
+                statusEl.classList.toggle('blinking', state.sw.splitting);
+            } else {
+                document.getElementById('statusLabel').classList.remove('blinking');
+            }
+
+            if (state.mode === 'CD') {
+                if (state.cd.running) {
+                    state.cd.current = Math.max(0, state.cd.duration - (Date.now() - state.cd.startTime));
+                    if (state.cd.current === 0) state.cd.running = false;
+                }
+                const cs = state.cd.current / 1000;
+                setHand('handSecond', (cs * 6) % 360);
+                setHand('handMinute', (cs / 60 * 6) % 360);
+                setHand('handHour', (cs / 3600 * 30) % 360);
+                setHand('handSubTop', (state.cd.current / 60000) * 6);
+                document.getElementById('subBottomLabel').textContent = "COUNTDOWN";
+                document.getElementById('statusLabel').textContent = state.cd.running ? "RUNNING" : "READY";
+            }
+
+            if (state.mode === 'WT') {
+                const wtDate = new Date(now.getTime() + state.wt.offset * 60000);
+                const wh = wtDate.getHours();
+                const wm = wtDate.getMinutes();
+                const ws = wtDate.getSeconds();
+                setHand('handSecond', (ws + ms / 1000) * 6);
+                setHand('handMinute', (wm + ws / 60) * 6);
+                setHand('handHour', ((wh % 12) + wm / 60) * 30);
+                // Local time in right subdial
+                setHand('handSubRight', (h + m / 60) * 15);
+                document.getElementById('subBottomLabel').textContent = "WORLD TIME";
+                document.getElementById('statusLabel').textContent = (state.wt.offset >= 0 ? "+" : "") + (state.wt.offset / 60).toFixed(1) + "H";
+            }
+
+            if (state.mode === 'AL') {
+                const ah = Math.floor(state.al.time / 3600000);
+                const am = (state.al.time % 3600000) / 60000;
+                setHand('handSecond', 0);
+                setHand('handMinute', am * 6);
+                setHand('handHour', (ah % 12 + am / 60) * 30);
+                document.getElementById('subBottomLabel').textContent = "ALARM";
+                const statusEl = document.getElementById('statusLabel');
+                statusEl.textContent = state.al.on ? "ALARM ON" : "ALARM OFF";
+                statusEl.classList.toggle('status-on', state.al.on);
+                statusEl.classList.toggle('status-off', !state.al.on);
+            } else {
+                const statusEl = document.getElementById('statusLabel');
+                statusEl.classList.remove('status-on', 'status-off');
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        function handlePress(btnId) {
+            if (btnId === 'btnC') {
+                const idx = config.modes.indexOf(state.mode);
+                state.mode = config.modes[(idx + 1) % config.modes.length];
+            }
+            if (btnId === 'btnA') {
+                if (state.mode === 'SW') {
+                    if (state.sw.running) state.sw.running = false;
+                    else { state.sw.running = true; state.sw.startTime = Date.now() - state.sw.elapsed; state.sw.splitting = false; }
+                }
+                if (state.mode === 'CD') {
+                    if (state.cd.running) state.cd.running = false;
+                    else { state.cd.running = true; state.cd.startTime = Date.now() - (state.cd.duration - state.cd.current); }
+                }
+                if (state.mode === 'WT') state.wt.offset += 15;
+                if (state.mode === 'AL') state.al.time = (state.al.time + 60000) % 86400000;
+            }
+            if (btnId === 'btnB') {
+                if (state.mode === 'SW') {
+                    if (state.sw.running) { state.sw.splitting = !state.sw.splitting; state.sw.splitTime = state.sw.elapsed; }
+                    else { state.sw.elapsed = 0; state.sw.splitting = false; }
+                }
+                if (state.mode === 'CD') {
+                    state.cd.running = false;
+                    if (state.cd.current === state.cd.duration) state.cd.duration = (state.cd.duration + 60000) % 43200000;
+                    else state.cd.current = state.cd.duration;
+                }
+                if (state.mode === 'WT') state.wt.offset -= 15;
+                if (state.mode === 'AL') state.al.time = (state.al.time - 60000 + 86400000) % 86400000;
+            }
+            if (btnId === 'btnD') {
+                if (state.mode === 'SW' && state.sw.running) {
+                    state.sw.startTime = Date.now();
+                    state.sw.elapsed = 0;
+                    state.sw.splitting = false;
+                }
+                if (state.mode === 'AL') state.al.on = !state.al.on;
+            }
+        }
+
+        ['btnA', 'btnB', 'btnC', 'btnD'].forEach(id => {
+            document.getElementById(id).addEventListener('mousedown', () => handlePress(id));
+        });
+
+        window.addEventListener('keydown', e => {
+            const k = e.key.toLowerCase();
+            if (k === 'a') handlePress('btnA');
+            if (k === 'b') handlePress('btnB');
+            if (k === 'c') handlePress('btnC');
+            if (k === 'd') handlePress('btnD');
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
