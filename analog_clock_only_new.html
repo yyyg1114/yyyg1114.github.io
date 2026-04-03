@@ -316,8 +316,8 @@
             <g id="subBottom" transform="translate(320,450)" class="sub-dial">
                 <circle r="65" />
                 <g class="sub-ticks" id="ticksBottom"></g>
-                <text y="15" id="subBottomLabel" class="sub-label">SECONDS</text>
-                <text y="30" id="statusLabel" class="sub-label" font-weight="bold"></text>
+                <text y="5" id="subBottomLabel" class="sub-label">SECONDS</text>
+                <text y="25" id="statusLabel" class="sub-label" font-weight="bold"></text>
                 <line id="handSubBottom" x1="0" y1="0" x2="0" y2="-52" class="hand hand-sub" />
                 <circle r="4" fill="#fff" />
             </g>
@@ -349,10 +349,9 @@
     </div>
 
     <div class="controls-hint">
-        <div><span class="hint-key">A</span> [左上] NEXT MODE | <small>LONG: TME</small></div>
-        <div><span class="hint-key">B</span> [左下] PREV MODE | <small>LONG: TME</small></div>
-        <div><span class="hint-key">C</span> [右上] START / SET+</div>
-        <div><span class="hint-key">D</span> [右下] RESET / SET- / AL ON-OFF</div>
+        <div><span class="hint-key">A/B</span> [左] MODE (LONG A: TME)</div>
+        <div><span class="hint-key">C/D</span> [右上/右下] SET / START-STOP / RESET / FLYBACK</div>
+        <div><span class="hint-key">E</span> [中央右] EDIT / SPLIT / CALENDAR</div>
     </div>
 
     <script>
@@ -360,9 +359,13 @@
             mode: 'TME',
             time: new Date(),
             sw: { running: false, startTime: 0, elapsed: 0, splitTime: 0, splitting: false },
-            cd: { running: false, startTime: 0, duration: 600000, current: 600000 }, // 10 min
-            wt: { offset: 0 }, // 15min steps relative to local
-            al: { on: false, time: 7 * 3600000 }, // 7:00 AM
+            cd: { running: false, startTime: 0, duration: 600000, current: 600000, repeat: false, isFinished: false },
+            wt: { offset: 0, on: true },
+            al: { on: false, time: 7 * 3600000 },
+            showCalendar: false,
+            showWeek: false,
+            editMode: 'none', // none, hour, minute, second
+            continuousInterval: null,
             frame: 0
         };
 
@@ -480,9 +483,8 @@
             // Mode Indicator
             setHand('handMode', config.modeAngles[state.mode]);
             config.modes.forEach(mode => {
-                document.getElementById(`label-${mode}`).classList.toggle('mode-active', state.mode === mode);
+                document.getElementById(`label-${mode}`).classList.toggle('mode-active', state.mode === mode)
             });
-
             if (state.mode === 'TME') {
                 const sAngle = (s + ms / 1000) * 6;
                 const mAngle = (m + s / 60) * 6;
@@ -504,7 +506,6 @@
                 setHand('handSecond', (es * 6) % 360);
                 setHand('handMinute', (d / 60000) * 6 % 360);
                 setHand('handHour', (d / 3600000) * 30 % 360);
-                // 1/2s subdial
                 setHand('handSubBottom', (d % 1000) / 1000 * 20 * 36);
                 document.getElementById('subBottomLabel').textContent = "1/2 SEC";
                 const statusEl = document.getElementById('statusLabel');
@@ -517,7 +518,14 @@
             if (state.mode === 'CD') {
                 if (state.cd.running) {
                     state.cd.current = Math.max(0, state.cd.duration - (Date.now() - state.cd.startTime));
-                    if (state.cd.current === 0) state.cd.running = false;
+                    if (state.cd.current === 0) {
+                        if (state.cd.repeat) {
+                            state.cd.startTime = Date.now();
+                        } else {
+                            state.cd.running = false;
+                            state.cd.isFinished = true;
+                        }
+                    }
                 }
                 const cs = state.cd.current / 1000;
                 setHand('handSecond', (cs * 6) % 360);
@@ -567,81 +575,107 @@
         });
 
         function handlePress(btnId, isLong) {
+            // CD isFinished logic: reset on any button press
+            if (state.mode === 'CD' && state.cd.isFinished) {
+                state.cd.isFinished = false;
+                state.cd.current = state.cd.duration;
+                return;
+            }
+
             if (isLong) {
-                // TME Jump on long press of A only
-                if (btnId === 'btnA') {
-                    state.mode = 'TME';
-                    return;
-                }
-                // Week Number on long press of E
+                if (btnId === 'btnA') { state.mode = 'TME'; state.editMode = 'none'; return; }
                 if (btnId === 'btnE') {
-                    state.showWeek = !state.showWeek;
-                    state.showCalendar = false;
-                    updateCalendar();
+                    if (state.mode === 'TME') {
+                        state.showWeek = !state.showWeek; state.showCalendar = false; updateCalendar();
+                    } else if (state.mode === 'CD') {
+                        // Toggle 5/10 min duration (or specific toggle)
+                        state.cd.duration = state.cd.duration === 300000 ? 600000 : 300000;
+                        state.cd.current = state.cd.duration;
+                    }
                     return;
                 }
                 return;
             }
 
-            // Mode Switching (A/B)
-            if (btnId === 'btnA') {
-                const idx = config.modes.indexOf(state.mode);
-                state.mode = config.modes[(idx + 1) % config.modes.length];
-            }
-            if (btnId === 'btnB') {
-                const idx = config.modes.indexOf(state.mode);
-                state.mode = config.modes[(idx - 1 + config.modes.length) % config.modes.length];
-            }
-
-            // Quick SW from TME
-            if (btnId === 'btnC' && state.mode === 'TME') {
-                state.mode = 'SW';
-                state.sw.running = true;
-                state.sw.startTime = Date.now();
+            // --- Edit Mode Logic (針の個別設定) ---
+            if (state.editMode !== 'none') {
+                if (btnId === 'btnE') {
+                    if (state.mode === 'AL' || state.mode === 'WT') {
+                        state.editMode = state.editMode === 'hour' ? 'minute' : 'none';
+                    } else if (state.mode === 'CD') {
+                        if (state.editMode === 'hour') state.editMode = 'minute';
+                        else if (state.editMode === 'minute') state.editMode = 'second';
+                        else state.editMode = 'none';
+                    }
+                    return;
+                }
+                if (btnId === 'btnD') changeTargetValue(1);
+                if (btnId === 'btnC') changeTargetValue(-1);
                 return;
             }
 
-            // Calendar Toggle (E)
+            // --- Normal Mode Logic ---
             if (btnId === 'btnE') {
-                state.showCalendar = !state.showCalendar;
-                state.showWeek = false;
-                updateCalendar();
+                if (state.mode === 'TME') { state.showCalendar = !state.showCalendar; state.showWeek = false; updateCalendar(); }
+                else if (state.mode === 'SW') { state.sw.splitting = !state.sw.splitting; if (state.sw.splitting) state.sw.splitTime = state.sw.elapsed; }
+                else if (state.mode === 'AL' || state.mode === 'WT' || state.mode === 'CD') { state.editMode = 'hour'; }
                 return;
             }
 
-            // Action / Set Buttons (C & D - Right side)
-            if (btnId === 'btnC') {
-                if (state.mode === 'SW') {
+            if (btnId === 'btnA') { const idx = config.modes.indexOf(state.mode); state.mode = config.modes[(idx + 1) % config.modes.length]; state.editMode = 'none'; return; }
+            if (btnId === 'btnB') { const idx = config.modes.indexOf(state.mode); state.mode = config.modes[(idx - 1 + config.modes.length) % config.modes.length]; state.editMode = 'none'; return; }
+
+            if (state.mode === 'TME' && btnId === 'btnC') { state.mode = 'SW'; state.sw.running = true; state.sw.startTime = Date.now(); return; }
+
+            if (state.mode === 'SW') {
+                if (btnId === 'btnC') {
                     if (state.sw.running) state.sw.running = false;
                     else { state.sw.running = true; state.sw.startTime = Date.now() - state.sw.elapsed; state.sw.splitting = false; }
-                }
-                if (state.mode === 'CD') {
-                    if (state.cd.running) state.cd.running = false;
-                    else { state.cd.running = true; state.cd.startTime = Date.now() - (state.cd.duration - state.cd.current); }
-                }
-                if (state.mode === 'WT') state.wt.offset += 15;
-                if (state.mode === 'AL') state.al.time = (state.al.time + 60000) % 86400000;
-            }
-
-            if (btnId === 'btnD') {
-                if (state.mode === 'SW') {
+                } else if (btnId === 'btnD') {
                     if (state.sw.running) {
-                        // Flyback: Reset and keep running
-                        state.sw.startTime = Date.now();
-                        state.sw.elapsed = 0;
-                        state.sw.splitting = false;
+                        // FLYBACK
+                        state.sw.startTime = Date.now(); state.sw.elapsed = 0; state.sw.splitting = false;
                     } else {
-                        state.sw.elapsed = 0;
-                        state.sw.splitting = false;
+                        // RESET
+                        state.sw.elapsed = 0; state.sw.splitting = false;
                     }
                 }
-                if (state.mode === 'CD') {
-                    state.cd.running = false;
-                    if (state.cd.current === state.cd.duration) state.cd.duration = (state.cd.duration + 60000) % 43200000;
+                return;
+            }
+
+            if (state.mode === 'CD') {
+                if (btnId === 'btnC') {
+                    if (state.cd.running) state.cd.running = false;
+                    else { state.cd.running = true; state.cd.startTime = Date.now() - (state.cd.duration - state.cd.current); }
+                } else if (btnId === 'btnD') {
+                    if (state.cd.running) state.cd.repeat = !state.cd.repeat;
                     else state.cd.current = state.cd.duration;
                 }
-                if (state.mode === 'WT') state.wt.offset -= 15;
-                if (state.mode === 'AL') state.al.on = !state.al.on;
+                return;
+            }
+
+            if (state.mode === 'AL') {
+                if (btnId === 'btnC') state.al.on = !state.al.on;
+                return;
+            }
+
+            if (state.mode === 'WT') {
+                if (btnId === 'btnC') state.wt.on = !state.wt.on;
+                return;
+            }
+        }
+
+        function changeTargetValue(dir) {
+            if (state.mode === 'AL') {
+                let diff = dir * (state.editMode === 'hour' ? 3600000 : 60000);
+                state.al.time = (state.al.time + diff + 86400000) % 86400000;
+            } else if (state.mode === 'CD') {
+                let diff = dir * (state.editMode === 'hour' ? 3600000 : (state.editMode === 'minute' ? 60000 : 1000));
+                state.cd.duration = Math.max(0, Math.min(43200000, state.cd.duration + diff));
+                state.cd.current = state.cd.duration;
+            } else if (state.mode === 'WT') {
+                let diff = dir * (state.editMode === 'hour' ? 60 : 15);
+                state.wt.offset += diff;
             }
         }
 
@@ -650,11 +684,19 @@
             pressState[id].timer = setTimeout(() => {
                 pressState[id].isLong = true;
                 handlePress(id, true);
+                if (state.editMode !== 'none' && (id === 'btnC' || id === 'btnD')) {
+                    const dir = (id === 'btnD') ? 1 : -1;
+                    state.continuousInterval = setInterval(() => changeTargetValue(dir), 100);
+                }
             }, 800);
         }
 
         function endPress(id) {
             clearTimeout(pressState[id].timer);
+            if (state.continuousInterval) {
+                clearInterval(state.continuousInterval);
+                state.continuousInterval = null;
+            }
             if (!pressState[id].isLong) {
                 handlePress(id, false);
             }
@@ -666,11 +708,19 @@
             if (!el) return;
             el.addEventListener('mousedown', (e) => { e.preventDefault(); startPress(id); });
             el.addEventListener('mouseup', (e) => { e.preventDefault(); endPress(id); });
-            el.addEventListener('mouseleave', (e) => { e.preventDefault(); clearTimeout(pressState[id].timer); });
+            el.addEventListener('mouseleave', (e) => {
+                e.preventDefault();
+                clearTimeout(pressState[id].timer);
+                if (state.continuousInterval) { clearInterval(state.continuousInterval); state.continuousInterval = null; }
+            });
 
             el.addEventListener('touchstart', (e) => { e.preventDefault(); startPress(id); }, { passive: false });
             el.addEventListener('touchend', (e) => { e.preventDefault(); endPress(id); }, { passive: false });
-            el.addEventListener('touchcancel', (e) => { e.preventDefault(); clearTimeout(pressState[id].timer); }, { passive: false });
+            el.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                clearTimeout(pressState[id].timer);
+                if (state.continuousInterval) { clearInterval(state.continuousInterval); state.continuousInterval = null; }
+            }, { passive: false });
         });
 
         window.addEventListener('keydown', e => {
