@@ -203,7 +203,7 @@
 
 <body>
     <div class="watch-container">
-        <svg viewBox="0 0 640 640" id="clockSVG">
+        <svg viewBox="0 0 680 680" id="clockSVG">
             <defs>
                 <pattern id="carbon-texture" x="0" y="0" width="1" height="1">
                     <image href="background.png" x="0" y="0" width="640" height="640"
@@ -281,6 +281,18 @@
                     </g>
                     <circle cx="0" cy="20" r="40" class="button-area" id="btnD" style="fill:transparent;" />
                 </g>
+
+                <!-- Push Button E (Top Left) -->
+                <g id="pusher-E" transform="rotate(90, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                    class="button-container">
+                    <g class="pusher-visuals">
+                        <rect x="15" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
+                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
+                        <text x="32" y="35" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
+                            transform="rotate(270, 32, 20)">E</text>
+                    </g>
+                    <circle cx="0" cy="20" r="40" class="button-area" id="btnE" style="fill:transparent;" />
+                </g>
             </g>
 
             <g id="markers" transform="translate(320,320)"></g>
@@ -337,10 +349,10 @@
     </div>
 
     <div class="controls-hint">
-        <div><span class="hint-key">A</span> [左上] START/STOP / SET+</div>
-        <div><span class="hint-key">B</span> [左下] RESET/SPLIT / SET-</div>
-        <div><span class="hint-key">C</span> [右上] MODE</div>
-        <div><span class="hint-key">D</span> [右下] ALARM ON/OFF / FLYBACK</div>
+        <div><span class="hint-key">A</span> [左上] NEXT MODE | <small>LONG: TME</small></div>
+        <div><span class="hint-key">B</span> [左下] PREV MODE | <small>LONG: TME</small></div>
+        <div><span class="hint-key">C</span> [右上] START / SET+</div>
+        <div><span class="hint-key">D</span> [右下] RESET / SET- / AL ON-OFF</div>
     </div>
 
     <script>
@@ -547,12 +559,32 @@
             requestAnimationFrame(tick);
         }
 
-        function handlePress(btnId) {
-            if (btnId === 'btnC') {
+        const pressState = {};
+        ['btnA', 'btnB', 'btnC', 'btnD'].forEach(id => {
+            pressState[id] = { timer: null, isLong: false };
+        });
+
+        function handlePress(btnId, isLong) {
+            if (isLong) {
+                // Jump to TME on long press of A or B
+                if (btnId === 'btnA' || btnId === 'btnB') {
+                    state.mode = 'TME';
+                }
+                return;
+            }
+
+            // Mode Switching (A: Next, B: Previous)
+            if (btnId === 'btnA') {
                 const idx = config.modes.indexOf(state.mode);
                 state.mode = config.modes[(idx + 1) % config.modes.length];
             }
-            if (btnId === 'btnA') {
+            if (btnId === 'btnB') {
+                const idx = config.modes.indexOf(state.mode);
+                state.mode = config.modes[(idx - 1 + config.modes.length) % config.modes.length];
+            }
+
+            // Action / Set Buttons (C & D - Right side)
+            if (btnId === 'btnC') {
                 if (state.mode === 'SW') {
                     if (state.sw.running) state.sw.running = false;
                     else { state.sw.running = true; state.sw.startTime = Date.now() - state.sw.elapsed; state.sw.splitting = false; }
@@ -564,10 +596,18 @@
                 if (state.mode === 'WT') state.wt.offset += 15;
                 if (state.mode === 'AL') state.al.time = (state.al.time + 60000) % 86400000;
             }
-            if (btnId === 'btnB') {
+
+            if (btnId === 'btnD') {
                 if (state.mode === 'SW') {
-                    if (state.sw.running) { state.sw.splitting = !state.sw.splitting; state.sw.splitTime = state.sw.elapsed; }
-                    else { state.sw.elapsed = 0; state.sw.splitting = false; }
+                    if (state.sw.running) {
+                        // Flyback: Reset and keep running
+                        state.sw.startTime = Date.now();
+                        state.sw.elapsed = 0;
+                        state.sw.splitting = false;
+                    } else {
+                        state.sw.elapsed = 0;
+                        state.sw.splitting = false;
+                    }
                 }
                 if (state.mode === 'CD') {
                     state.cd.running = false;
@@ -575,28 +615,44 @@
                     else state.cd.current = state.cd.duration;
                 }
                 if (state.mode === 'WT') state.wt.offset -= 15;
-                if (state.mode === 'AL') state.al.time = (state.al.time - 60000 + 86400000) % 86400000;
-            }
-            if (btnId === 'btnD') {
-                if (state.mode === 'SW' && state.sw.running) {
-                    state.sw.startTime = Date.now();
-                    state.sw.elapsed = 0;
-                    state.sw.splitting = false;
-                }
                 if (state.mode === 'AL') state.al.on = !state.al.on;
             }
         }
 
+        function startPress(id) {
+            pressState[id].isLong = false;
+            pressState[id].timer = setTimeout(() => {
+                pressState[id].isLong = true;
+                handlePress(id, true);
+            }, 800);
+        }
+
+        function endPress(id) {
+            clearTimeout(pressState[id].timer);
+            if (!pressState[id].isLong) {
+                handlePress(id, false);
+            }
+            pressState[id].isLong = false;
+        }
+
         ['btnA', 'btnB', 'btnC', 'btnD'].forEach(id => {
-            document.getElementById(id).addEventListener('mousedown', () => handlePress(id));
+            const el = document.getElementById(id);
+            el.addEventListener('mousedown', (e) => { e.preventDefault(); startPress(id); });
+            el.addEventListener('mouseup', (e) => { e.preventDefault(); endPress(id); });
+            el.addEventListener('mouseleave', (e) => { e.preventDefault(); clearTimeout(pressState[id].timer); });
+
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); startPress(id); }, { passive: false });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); endPress(id); }, { passive: false });
+            el.addEventListener('touchcancel', (e) => { e.preventDefault(); clearTimeout(pressState[id].timer); }, { passive: false });
         });
 
         window.addEventListener('keydown', e => {
+            if (e.repeat) return;
             const k = e.key.toLowerCase();
-            if (k === 'a') handlePress('btnA');
-            if (k === 'b') handlePress('btnB');
-            if (k === 'c') handlePress('btnC');
-            if (k === 'd') handlePress('btnD');
+            if (k === 'a') handlePress('btnA', false);
+            if (k === 'b') handlePress('btnB', false);
+            if (k === 'c') handlePress('btnC', false);
+            if (k === 'd') handlePress('btnD', false);
         });
 
         init();
