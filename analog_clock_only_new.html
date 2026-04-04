@@ -359,13 +359,14 @@
             mode: 'TME',
             time: new Date(),
             sw: { running: false, startTime: 0, elapsed: 0, splitTime: 0, splitting: false },
-            cd: { running: false, startTime: 0, duration: 600000, current: 600000, repeat: false, isFinished: false },
+            cd: { running: false, startTime: 0, duration: 600000, current: 600000, repeat: false, isFinished: false, isSweeping: false },
             wt: { offset: 0, on: true },
             al: { on: false, time: 7 * 3600000 },
             showCalendar: false,
             showWeek: false,
             editMode: 'none', // none, hour, minute, second
             continuousInterval: null,
+            wiggle: { startTime: 0, target: 'none' }, // target: hour, minute, second
             frame: 0
         };
 
@@ -470,7 +471,22 @@
         }
 
         function setHand(id, angle) {
-            document.getElementById(id).setAttribute('transform', `rotate(${angle})`);
+            let offset = 0;
+            const w = state.wiggle;
+            const elapsed = Date.now() - w.startTime;
+
+            if (elapsed < 300) {
+                let match = false;
+                if (id === 'handHour' && w.target === 'hour') match = true;
+                if (id === 'handMinute' && w.target === 'minute') match = true;
+                if (id === 'handSecond' && w.target === 'second') match = true;
+
+                if (match) {
+                    // 2 cycles of sine wave over 300ms, amplitude 2 degrees
+                    offset = 4 * Math.sin((elapsed / 300) * Math.PI * 4);
+                }
+            }
+            document.getElementById(id).setAttribute('transform', `rotate(${angle + offset})`);
         }
 
         function tick() {
@@ -526,6 +542,15 @@
                             state.cd.isFinished = true;
                         }
                     }
+                } else if (state.cd.isSweeping && state.editMode === 'none') {
+                    // Sweep logic: move towards duration
+                    const diff = state.cd.duration - state.cd.current;
+                    if (Math.abs(diff) < 100) {
+                        state.cd.current = state.cd.duration;
+                        state.cd.isSweeping = false;
+                    } else {
+                        state.cd.current += diff * 0.15; // Ease towards target
+                    }
                 }
                 const cs = state.cd.current / 1000;
                 setHand('handSecond', (cs * 6) % 360);
@@ -575,10 +600,10 @@
         });
 
         function handlePress(btnId, isLong) {
-            // CD isFinished logic: reset on any button press
+            // CD isFinished logic: reset on any button press (with sweep)
             if (state.mode === 'CD' && state.cd.isFinished) {
                 state.cd.isFinished = false;
-                state.cd.current = state.cd.duration;
+                state.cd.isSweeping = true;
                 return;
             }
 
@@ -590,7 +615,7 @@
                     } else if (state.mode === 'CD') {
                         // Toggle 5/10 min duration (or specific toggle)
                         state.cd.duration = state.cd.duration === 300000 ? 600000 : 300000;
-                        state.cd.current = state.cd.duration;
+                        state.cd.isSweeping = true;
                     }
                     return;
                 }
@@ -600,12 +625,17 @@
             // --- Edit Mode Logic (針の個別設定) ---
             if (state.editMode !== 'none') {
                 if (btnId === 'btnE') {
+                    // Switch edit target
                     if (state.mode === 'AL' || state.mode === 'WT') {
                         state.editMode = state.editMode === 'hour' ? 'minute' : 'none';
                     } else if (state.mode === 'CD') {
                         if (state.editMode === 'hour') state.editMode = 'minute';
                         else if (state.editMode === 'minute') state.editMode = 'second';
                         else state.editMode = 'none';
+                    }
+                    if (state.editMode !== 'none') {
+                        state.wiggle.startTime = Date.now();
+                        state.wiggle.target = state.editMode;
                     }
                     return;
                 }
@@ -618,7 +648,11 @@
             if (btnId === 'btnE') {
                 if (state.mode === 'TME') { state.showCalendar = !state.showCalendar; state.showWeek = false; updateCalendar(); }
                 else if (state.mode === 'SW') { state.sw.splitting = !state.sw.splitting; if (state.sw.splitting) state.sw.splitTime = state.sw.elapsed; }
-                else if (state.mode === 'AL' || state.mode === 'WT' || state.mode === 'CD') { state.editMode = 'hour'; }
+                else if (state.mode === 'AL' || state.mode === 'WT' || state.mode === 'CD') {
+                    state.editMode = 'hour';
+                    state.wiggle.startTime = Date.now();
+                    state.wiggle.target = 'hour';
+                }
                 return;
             }
 
@@ -646,10 +680,10 @@
             if (state.mode === 'CD') {
                 if (btnId === 'btnC') {
                     if (state.cd.running) state.cd.running = false;
-                    else { state.cd.running = true; state.cd.startTime = Date.now() - (state.cd.duration - state.cd.current); }
+                    else { state.cd.running = true; state.cd.startTime = Date.now() - (state.cd.duration - state.cd.current); state.cd.isSweeping = false; }
                 } else if (btnId === 'btnD') {
                     if (state.cd.running) state.cd.repeat = !state.cd.repeat;
-                    else state.cd.current = state.cd.duration;
+                    else { state.cd.isSweeping = true; }
                 }
                 return;
             }
