@@ -502,7 +502,7 @@
                 document.getElementById(`label-${mode}`).classList.toggle('mode-active', state.mode === mode)
             });
             if (state.mode === 'TME') {
-                const sAngle = (s + ms / 1000) * 6;
+                const sAngle = s * 6; // Step motion
                 const mAngle = (m + s / 60) * 6;
                 const hAngle = ((h % 12) + m / 60) * 30;
                 setHand('handSecond', sAngle);
@@ -510,8 +510,9 @@
                 setHand('handHour', hAngle);
                 setHand('handSubTop', mAngle);
                 setHand('handSubRight', (h + m / 60) * 15);
-                setHand('handSubBottom', sAngle);
-                document.getElementById('subBottomLabel').textContent = "SECONDS";
+                // 1/5s behavior: moves in 0.2s steps (72 degrees each)
+                setHand('handSubBottom', Math.floor(ms / 200) * 72);
+                document.getElementById('subBottomLabel').textContent = "1/5 SEC";
                 document.getElementById('statusLabel').textContent = "";
             }
 
@@ -566,7 +567,7 @@
                 const wh = wtDate.getHours();
                 const wm = wtDate.getMinutes();
                 const ws = wtDate.getSeconds();
-                setHand('handSecond', (ws + ms / 1000) * 6);
+                setHand('handSecond', ws * 6); // Step motion
                 setHand('handMinute', (wm + ws / 60) * 6);
                 setHand('handHour', ((wh % 12) + wm / 60) * 30);
                 // Local time in right subdial
