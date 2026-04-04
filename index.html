@@ -2,216 +2,250 @@
 <html lang="ja">
 
 <head>
-	<meta charset="utf-8">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>yyyg1114's room</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="ページの説明">
-	<meta name="keywords" content="ページのキーワードA,B,C">
-
+	<!-- Google Fonts: Outfit -->
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
 	<style>
-		@charset "UTF-8";
+		:root {
+			--bg-color: #0a0a0a;
+			--card-bg: rgba(255, 255, 255, 0.03);
+			--card-border: rgba(255, 255, 255, 0.2);
+			--text-main: #ffffff;
+			--text-secondary: #a0a0a0;
+			--accent-glow: rgba(255, 255, 255, 0.15);
+			--transition-speed: 0.4s;
+		}
 
-		body {
-			background: #F7F7F7;
+		* {
 			margin: 0;
 			padding: 0;
-			line-height: 1.6;
+			box-sizing: border-box;
+		}
+
+		body {
+			background-color: var(--bg-color);
+			color: var(--text-main);
+			font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			min-height: 100vh;
+			overflow-x: hidden;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		/* Ambient Background */
+		.page-bg {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('index_background.png');
+			background-size: cover;
+			background-position: center;
+			z-index: -1;
+			transform: scale(1.05);
+			/* Slight zoom for future animation */
 		}
 
 		header {
-			padding: 10px 20px;
-			height: 94px;
-			position: relative;
-			z-index: 4;
-			background: linear-gradient(to bottom, rgba(110, 0, 0, 1), rgba(110, 0, 0, 1));
-			background-size: auto;
-		}
-
-		#header-inner {
-			margin: 0 auto;
-			max-width: 1000px;
-		}
-
-		.description {
-			padding-left: 10px;
-			line-height: 1.2;
-		}
-
-		#container {
-			margin: 0 auto;
-			max-width: 1000px;
-			background-color: #fff;
-			position: relative;
-			z-index: 1;
-			padding: 20px;
-		}
-
-		#text {
-			padding: 0 20px 0 0;
-		}
-
-		ul {
-			margin: 0 0 0 1em;
-			padding: 0;
-		}
-
-		li {
-			list-style: none;
-		}
-
-		p {
-			margin: 1em 0;
-		}
-
-		img {
-			max-width: 100%;
-			height: auto;
-			border: 0;
-		}
-
-		hr {
-			border-width: 1px 0 0 0;
-			border-style: solid;
-			border-color: #5e5e5e;
-			height: 1px;
-		}
-
-		body a {
-			font-weight: normal;
+			width: 100%;
+			padding: 4rem 2rem 2rem;
+			text-align: center;
+			animation: fadeInDown 1s ease-out forwards;
 		}
 
 		h1 {
-			color: #fff;
-			font-size: 28px;
-			padding: 20px 0 0 0;
-			margin: 0;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+			font-size: 3.5rem;
+			font-weight: 600;
+			letter-spacing: -1px;
+			margin-bottom: 0.5rem;
+			background: linear-gradient(135deg, #fff 0%, #888 100%);
+			-webkit-background-clip: text;
+			background-clip: text;
+			-webkit-text-fill-color: transparent;
 		}
 
-		h1 a {
-			font-weight: bold;
-			color: #fff;
+		main {
+			flex: 1;
+			width: 100%;
+			max-width: 900px;
+			padding: 2rem;
+			display: flex;
+			flex-direction: column;
+			gap: 1.5rem;
+			animation: fadeInUp 1s ease-out 0.3s forwards;
+			opacity: 0;
+		}
+
+		.project-link {
+			display: block;
 			text-decoration: none;
+			color: inherit;
+			background: var(--card-bg);
+			border: 1px solid var(--card-border);
+			backdrop-filter: blur(12px);
+			padding: 2rem;
+			border-radius: 16px;
+			transition: all var(--transition-speed) cubic-bezier(0.23, 1, 0.32, 1);
+			position: relative;
+			overflow: hidden;
 		}
 
-		h1 a:hover {
-			font-weight: bold;
-			color: #ffffff;
-			text-decoration: underline;
+		.project-link::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+			transition: 0.5s;
 		}
 
-		h2,
-		h3,
-		h4 {
-			font-size: 28px;
-			margin: 4px 0 0 0;
-			padding: 9px 0 7px 0;
+		.project-link:hover {
+			transform: translateY(-5px);
+			background: rgba(255, 255, 255, 0.08);
+			border-color: rgba(255, 255, 255, 0.3);
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px var(--accent-glow);
 		}
 
-		.side-title {
-			background: #3f3f3f;
-			font-weight: bold;
-			border: 1px solid #ccc;
-			margin-bottom: 10px;
-			padding: 10px 20px;
-			border-radius: 3px;
+		.project-link:hover::before {
+			left: 100%;
 		}
 
-		.side {
-			margin: 10px;
-			padding: 10px 10px 10px 10px;
+		.project-link h2 {
+			font-size: 1.5rem;
+			font-weight: 400;
+			margin-bottom: 0.5rem;
 		}
 
-		aside a {
-			color: #3b5998;
-			text-decoration: none;
+		.project-link p {
+			color: var(--text-secondary);
+			font-size: 0.95rem;
+			font-weight: 300;
 		}
 
-		aside a:hover {
-			color: #0000ee;
-			text-decoration: underline;
+		.project-link .arrow {
+			position: absolute;
+			right: 2rem;
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: 1.5rem;
+			opacity: 0.3;
+			transition: all var(--transition-speed);
+		}
+
+		.project-link:hover .arrow {
+			opacity: 1;
+			right: 1.5rem;
 		}
 
 		footer {
-			background-color: #fff;
-			padding-top: 20px;
-			font-size: 12px;
-			height: 100px;
-			clear: both;
+			font-style: italic;
+			font-size: 20px;
+			padding: 4rem 2rem;
+			width: 100%;
 			text-align: center;
+			color: var(--text-secondary);
+			letter-spacing: 1px;
+			animation: fadeIn 1s ease-out 0.6s forwards;
+			opacity: 0;
 		}
 
-		blockquote {
-			border: 1px solid #ccc;
-			padding: 5px;
-			margin: 10px;
+		/* Animations */
+		@keyframes fadeInDown {
+			from {
+				opacity: 0;
+				transform: translateY(-30px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
 		}
 
-		@media screen and (max-width: 767px) {
-			#header-inner {
-				margin: 0;
-				max-width: 100%;
+		@keyframes fadeInUp {
+			from {
+				opacity: 0;
+				transform: translateY(30px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+			}
+
+			to {
+				opacity: 1;
+			}
+		}
+
+		/* Responsive Adjustments */
+		@media (max-width: 600px) {
+			h1 {
+				font-size: 2.5rem;
+			}
+
+			header {
+				padding: 3rem 1rem 1.5rem;
 			}
 
 			main {
-				width: 100%;
+				padding: 1rem;
 			}
 
-			aside {
-				width: 100%;
+			.project-link {
+				padding: 1.5rem;
 			}
 
-			#container {
-				display: block;
-				margin: 0;
-				max-width: 100%;
+			.project-link h2 {
+				font-size: 1.2rem;
 			}
-
-			h1 {
-				font-size: 24px;
-				padding: 10px 0;
-			}
-		}
-
-		a {
-			background-color: #3b5998;
-			color: antiquewhite;
-			border-radius: 5px;
-			width: 200px;
-			height: 600px;
-			margin: px;
-			text-decoration: none;
-			cursor: default;
-		}
-
-		.digital_analog {
-			padding: 10px;
-			margin: 10px;
-			text-align: center;
 		}
 	</style>
-
 </head>
 
 <body>
-	<div id="outer">
-		<header>
-			<div id="header-inner">
-				<a href="#" style="text-align: left;">
-					<h1>yyyg1114's room</h1>
-				</a>
-			</div>
-		</header>
-		<div id="container">
-			<main>
-				<div id="text">
-					<a href="./analog_clock_re.html" class="digital_analog"> ~~~ デジタル&クロノグラフ ~~~ </a>
-					<a href="./analog_clock_only.html" class="digital_analog"> ~~~ アナログ時計 ~~~ </a>
-					<a href="./analog_clock_only_new.html" class="digital_analog"> ~~~ アナログ時計(new) ~~~ </a>
+	<div class="page-bg"></div>
 
-					<footer>
-						© 2026 yyyg1114's room
-					</footer>
-				</div>
+	<header>
+		<h1>yyyg1114's room</h1>
+	</header>
+
+	<main>
+		<a href="./analog_clock_re.html" class="project-link">
+			<h2>デジタル & クロノグラフ</h2>
+			<p>高機能なデジタル表示とクロノグラフ機能を備えた多機能時計モデル。</p>
+			<span class="arrow">→</span>
+		</a>
+
+		<a href="./analog_clock_only.html" class="project-link">
+			<h2>アナログ時計</h2>
+			<p>ミニマルで視認性に優れたクラシックなアナログ時計。</p>
+			<span class="arrow">→</span>
+		</a>
+
+		<a href="./analog_clock_only_new.html" class="project-link">
+			<h2>アナログ時計 (New)</h2>
+			<p>独自のカーボンテクスチャとモダンな美学を融合させた最新デザイン。</p>
+			<span class="arrow">→</span>
+		</a>
+	</main>
+
+	<footer>
+		<p>© 2026 yyyg1114's room. All rights reserved.</p>
+	</footer>
 </body>
 
 </html>
