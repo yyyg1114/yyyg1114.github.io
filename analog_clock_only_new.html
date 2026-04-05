@@ -127,10 +127,18 @@
         }
 
         .button-container:active .pusher-visuals {
-            transform: rotate(90deg) translateX(40px) translateY(13px) scale(0.98);
+            transform: rotate(90deg) translateX(30px) translateY(13px) scale(0.98);
+        }
+
+        .button-container.deep-press:active .pusher-visuals {
+            transform: rotate(90deg) translateX(50px) translateY(13px) scale(0.98);
         }
 
         .button-container1:active .pusher-visuals {
+            transform: rotate(90deg) translateX(30px) translateY(9px) scale(0.98);
+        }
+
+        .button-container1.deep-press:active .pusher-visuals {
             transform: rotate(90deg) translateX(50px) translateY(9px) scale(0.98);
         }
 
@@ -763,6 +771,8 @@
             pressState[id].isLong = false;
             pressState[id].timer = setTimeout(() => {
                 pressState[id].isLong = true;
+                const container = document.getElementById(id).parentNode;
+                if (container) container.classList.add('deep-press');
                 handlePress(id, true);
                 if (state.editMode !== 'none' && (id === 'btnC' || id === 'btnD')) {
                     const dir = (id === 'btnD') ? 1 : -1;
@@ -773,6 +783,8 @@
 
         function endPress(id) {
             clearTimeout(pressState[id].timer);
+            const container = document.getElementById(id).parentNode;
+            if (container) container.classList.remove('deep-press');
             if (state.continuousInterval) {
                 clearInterval(state.continuousInterval);
                 state.continuousInterval = null;
@@ -791,6 +803,8 @@
             el.addEventListener('mouseleave', (e) => {
                 e.preventDefault();
                 clearTimeout(pressState[id].timer);
+                const container = document.getElementById(id).parentNode;
+                if (container) container.classList.remove('deep-press');
                 if (state.continuousInterval) { clearInterval(state.continuousInterval); state.continuousInterval = null; }
             });
 
@@ -799,6 +813,8 @@
             el.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
                 clearTimeout(pressState[id].timer);
+                const container = document.getElementById(id).parentNode;
+                if (container) container.classList.remove('deep-press');
                 if (state.continuousInterval) { clearInterval(state.continuousInterval); state.continuousInterval = null; }
             }, { passive: false });
         });
