@@ -104,7 +104,7 @@
             fill: none;
             stroke: #8a8a8a;
             stroke-width: 0.5;
-            opacity: 0.3;
+            opacity: 0.5;
             pointer-events: none;
         }
 
@@ -469,7 +469,7 @@
             // Sub-dial snail finish (concentric circles)
             document.querySelectorAll('.sub-dial').forEach(dial => {
                 const snailG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                for (let r = 1; r < 65; r += 1.5) {
+                for (let r = 1; r < 65; r += 3.5) {
                     const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     c.setAttribute('r', r);
                     c.setAttribute('class', 'snail-line');
