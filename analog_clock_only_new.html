@@ -52,6 +52,12 @@
             stroke-linecap: round;
         }
 
+        .tick-bold {
+            stroke: #fff;
+            stroke-width: 7;
+            stroke-linecap: round;
+        }
+
         .tick-minor {
             stroke: #666;
             stroke-width: 1.5;
@@ -88,10 +94,18 @@
             stroke-width: 3;
         }
 
-        .sub-dial circle {
-            fill: rgba(0, 0, 0, 0.4);
+        .sub-dial>circle:first-child {
+            fill: rgba(0, 0, 0, 0.65);
             stroke: #333;
             stroke-width: 2;
+        }
+
+        .snail-line {
+            fill: none;
+            stroke: #8a8a8a;
+            stroke-width: 0.5;
+            opacity: 0.3;
+            pointer-events: none;
         }
 
         .sub-label {
@@ -428,10 +442,17 @@
                 line.setAttribute('y1', Math.sin(rad) * r1);
                 line.setAttribute('x2', Math.cos(rad) * r2);
                 line.setAttribute('y2', Math.sin(rad) * r2);
-                line.className.baseVal = i % 25 === 0 ? 'tick' : (i % 5 === 0 ? 'tick-minor' : 'tick-sub');
+
+                const hour = i / 25;
+                const isBoldPos = (i % 25 === 0 && [0, 3, 6, 9].includes(hour));
+                if (isBoldPos) {
+                    line.className.baseVal = 'tick-bold';
+                } else {
+                    line.className.baseVal = i % 25 === 0 ? 'tick' : (i % 5 === 0 ? 'tick-minor' : 'tick-sub');
+                }
                 markers.appendChild(line);
 
-                if (i % 25 === 0) {
+                if (i % 25 === 0 && !isBoldPos) {
                     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     const rText = 185;
                     text.setAttribute('x', Math.cos(rad) * rText);
@@ -440,10 +461,23 @@
                     text.style.fill = '#fff';
                     text.style.fontWeight = '700';
                     text.style.textAnchor = 'middle';
-                    text.textContent = i === 0 ? '12' : i / 25;
+                    text.textContent = i / 25;
                     markers.appendChild(text);
                 }
             }
+
+            // Sub-dial snail finish (concentric circles)
+            document.querySelectorAll('.sub-dial').forEach(dial => {
+                const snailG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                for (let r = 1; r < 65; r += 1.5) {
+                    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    c.setAttribute('r', r);
+                    c.setAttribute('class', 'snail-line');
+                    snailG.appendChild(c);
+                }
+                // Insert after the background circle
+                dial.insertBefore(snailG, dial.querySelector('circle').nextSibling);
+            });
 
             const subdialTickConfigs = [
                 { id: 'ticksTop', count: 60, interval: 5 },
