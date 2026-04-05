@@ -127,7 +127,11 @@
         }
 
         .button-container:active .pusher-visuals {
-            transform: translateX(-20px);
+            transform: rotate(90deg) translateX(40px) translateY(13px) scale(0.98);
+        }
+
+        .button-container1:active .pusher-visuals {
+            transform: rotate(90deg) translateX(50px) translateY(9px) scale(0.98);
         }
 
         .button-area:hover+.button-visual {
@@ -198,6 +202,10 @@
         .blinking {
             animation: blink 1.0s infinite;
         }
+
+        .status-mode #ticksBottom text {
+            display: none;
+        }
     </style>
 </head>
 
@@ -216,14 +224,31 @@
                     <stop offset="100%" style="stop-color:#000;stop-opacity:1" />
                 </radialGradient>
 
-                <linearGradient id="metal-pushed-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#222;stop-opacity:1" />
-                    <stop offset="50%" style="stop-color:#666;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#222;stop-opacity:1" />
+                <linearGradient id="metal-cylinder-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#333;stop-opacity:1" />
+                    <stop offset="25%" style="stop-color:#888;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#fff;stop-opacity:1" />
+                    <stop offset="75%" style="stop-color:#888;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#333;stop-opacity:1" />
+                </linearGradient>
+
+                <linearGradient id="metal-cap-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#555;stop-opacity:1" />
+                    <stop offset="50%" style="stop-color:#aaa;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#555;stop-opacity:1" />
+                </linearGradient>
+
+                <linearGradient id="crown-groove-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#111;stop-opacity:1" />
+                    <stop offset="20%" style="stop-color:#444;stop-opacity:1" />
+                    <stop offset="40%" style="stop-color:#111;stop-opacity:1" />
+                    <stop offset="60%" style="stop-color:#444;stop-opacity:1" />
+                    <stop offset="80%" style="stop-color:#111;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#444;stop-opacity:1" />
                 </linearGradient>
 
                 <filter id="pusher-shadow">
-                    <feDropShadow dx="2" dy="5" stdDeviation="5" flood-opacity="0.5" />
+                    <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.6" />
                 </filter>
             </defs>
 
@@ -233,65 +258,74 @@
                 <circle cx="320" cy="320" r="261" fill="#111" />
                 <circle cx="320" cy="320" r="260" fill="url(#carbon-texture)" />
 
-                <!-- Push Button A (Top Left) -->
-                <g id="pusher-A" transform="rotate(305, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                <!-- Push Button A (Mode Switch) -->
+                <g id="pusher-A" transform="rotate(305, 320, 320) translate(312, -20)" style="cursor:pointer;"
                     class="button-container">
-                    <g class="pusher-visuals">
-                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
-                        <rect x="5" y="5" width="5" height="30" fill="var(--accent-color)" opacity="0.8" />
-                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
-                        <text x="32" y="36" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
-                            transform="rotate(90, 32, 20)">A</text>
+                    <g class="pusher-visuals" transform="rotate(90, -12, 0)">
+                        <rect x="-12" y="-18" width="20" height="36" rx="4" fill="#4d4d4d" /> <!-- Base -->
+                        <rect x="5" y="-15" width="15" height="30" fill="url(#metal-cylinder-grad)" /> <!-- Stem -->
+                        <rect x="18" y="-18" width="30" height="36" rx="6" fill="url(#metal-cylinder-grad)" />
+                        <!-- Head -->
+                        <text x="33" y="7" font-size="20" font-weight="bold" fill="#333" text-anchor="middle"
+                            transform="rotate(0, 33, 0)">A</text>
                     </g>
-                    <circle cx="0" cy="20" r="40" class="button-area" id="btnA" style="fill:transparent;" />
+                    <circle cx="-12" cy="45" r="45" class="button-area" id="btnA" style="fill:transparent;" />
                 </g>
 
-                <!-- Push Button B (Bottom Left) -->
-                <g id="pusher-B" transform="rotate(235, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                <!-- Push Button B (Mode Down) -->
+                <g id="pusher-B" transform="rotate(235, 320, 320) translate(312, -20)" style="cursor:pointer;"
                     class="button-container">
-                    <g class="pusher-visuals">
-                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
-                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
-                        <text x="32" y="36" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
-                            transform="rotate(90, 32, 20)">B</text>
+                    <g class="pusher-visuals" transform="rotate(90, -12, 0)">
+                        <rect x="-12" y="-18" width="20" height="36" rx="4" fill="#4d4d4d" />
+                        <rect x="5" y="-15" width="15" height="30" fill="url(#metal-cylinder-grad)" />
+                        <rect x="18" y="-18" width="30" height="36" rx="6" fill="url(#metal-cylinder-grad)" />
+                        <text x="33" y="7" font-size="20" font-weight="bold" fill="#333" text-anchor="middle"
+                            transform="rotate(0, 33, 0)">B</text>
                     </g>
-                    <circle cx="0" cy="20" r="40" class="button-area" id="btnB" style="fill:transparent;" />
+                    <circle cx="-12" cy="45" r="45" class="button-area" id="btnB" style="fill:transparent;" />
                 </g>
 
-                <!-- Push Button C (Top Right) -->
-                <g id="pusher-C" transform="rotate(55, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                <!-- Push Button C (Start/Stop) -->
+                <g id="pusher-C" transform="rotate(55, 320, 320) translate(312, -20)" style="cursor:pointer;"
                     class="button-container">
-                    <g class="pusher-visuals">
-                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
-                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
-                        <text x="32" y="20" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
-                            transform="rotate(270, 32, 20)">C</text>
+                    <g class="pusher-visuals" transform="rotate(90, -12, 0)">
+                        <rect x="-12" y="-18" width="20" height="36" rx="4" fill="#4d4d4d" />
+                        <rect x="5" y="-15" width="15" height="30" fill="url(#metal-cylinder-grad)" />
+                        <rect x="18" y="-18" width="30" height="36" rx="6" fill="url(#metal-cylinder-grad)" />
+                        <text x="33" y="7" font-size="20" font-weight="bold" fill="#333" text-anchor="middle"
+                            transform="rotate(180, 33, 0)">C</text>
                     </g>
-                    <circle cx="0" cy="20" r="40" class="button-area" id="btnC" style="fill:transparent;" />
+                    <circle cx="-12" cy="45" r="45" class="button-area" id="btnC" style="fill:transparent;" />
                 </g>
 
-                <!-- Push Button D (Bottom Right) -->
-                <g id="pusher-D" transform="rotate(125, 320, 320) translate(280, -20)" style="cursor:pointer;"
+                <!-- Push Button D (Reset) -->
+                <g id="pusher-D" transform="rotate(125, 320, 320) translate(312, -20)" style="cursor:pointer;"
                     class="button-container">
-                    <g class="pusher-visuals">
-                        <rect x="0" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
-                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
-                        <text x="32" y="20" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
-                            transform="rotate(270, 32, 20)">D</text>
+                    <g class="pusher-visuals" transform="rotate(90, -12, 0)">
+                        <rect x="-12" y="-18" width="20" height="36" rx="4" fill="#4d4d4d" />
+                        <rect x="5" y="-15" width="15" height="30" fill="url(#metal-cylinder-grad)" />
+                        <rect x="18" y="-18" width="30" height="36" rx="6" fill="url(#metal-cylinder-grad)" />
+                        <text x="33" y="7" font-size="20" font-weight="bold" fill="#333" text-anchor="middle"
+                            transform="rotate(180, 33, 0)">D</text>
                     </g>
-                    <circle cx="0" cy="20" r="40" class="button-area" id="btnD" style="fill:transparent;" />
+                    <circle cx="-12" cy="45" r="45" class="button-area" id="btnD" style="fill:transparent;" />
                 </g>
 
-                <!-- Push Button E (Top Left) -->
-                <g id="pusher-E" transform="rotate(90, 320, 320) translate(280, -20)" style="cursor:pointer;"
-                    class="button-container">
-                    <g class="pusher-visuals">
-                        <rect x="15" y="0" width="45" height="40" rx="5" fill="url(#metal-pushed-grad)" />
-                        <rect x="-10" y="0" width="10" height="40" rx="2" fill="#111" />
-                        <text x="32" y="35" font-size="20" font-weight="bold" fill="white" text-anchor="middle"
-                            transform="rotate(270, 32, 20)">E</text>
+                <!-- Push Button E (Crown) -->
+                <g id="pusher-E" transform="rotate(90, 320, 320) translate(305, -20)" style="cursor:pointer;"
+                    class="button-container1">
+                    <g class="pusher-visuals" transform="rotate(90, -10, 0)">
+                        <rect x="-10" y="-22" width="20" height="44" rx="3" fill="#4d4d4d" /> <!-- Base -->
+                        <rect x="10" y="-18" width="8" height="36" fill="url(#metal-cylinder-grad)" /> <!-- Stem -->
+                        <rect x="18" y="-20" width="35" height="40" rx="4" fill="url(#metal-cylinder-grad)" />
+                        <!-- Crown Main -->
+                        <rect x="18" y="-20" width="35" height="40" rx="4" fill="url(#crown-groove-grad)"
+                            opacity="0.3" /> <!-- Grooves -->
+                        <ellipse cx="53" cy="0" rx="4" ry="20" fill="url(#metal-cap-grad)" /> <!-- Crown Face -->
+                        <text x="33" y="7" font-size="20" font-weight="bold" fill="#333" text-anchor="middle"
+                            opacity="0.8" transform="rotate(180, 33, 0)">E</text>
                     </g>
-                    <circle cx="0" cy="20" r="40" class="button-area" id="btnE" style="fill:transparent;" />
+                    <circle cx="-10" cy="45" r="45" class="button-area" id="btnE" style="fill:transparent;" />
                 </g>
             </g>
 
@@ -316,7 +350,7 @@
             <g id="subBottom" transform="translate(320,450)" class="sub-dial">
                 <circle r="65" />
                 <g class="sub-ticks" id="ticksBottom"></g>
-                <text y="5" id="subBottomLabel" class="sub-label">SECONDS</text>
+                <text y="11" id="subBottomLabel" class="sub-label">SECONDS</text>
                 <text y="25" id="statusLabel" class="sub-label" font-weight="bold"></text>
                 <line id="handSubBottom" x1="0" y1="0" x2="0" y2="-52" class="hand hand-sub" />
                 <circle r="4" fill="#fff" />
@@ -337,8 +371,8 @@
             <g id="calendarRing" transform="translate(320,320)"></g>
 
             <g transform="translate(320,320)">
-                <text id="brand" x="0" y="-45" font-size="22" text-anchor="middle">CRONOSURF</text>
-                <text id="tagline" x="0" y="-25" font-size="12" text-anchor="middle">WAVEMASTER</text>
+                <text id="brand" x="0" y="-45" font-size="21" text-anchor="middle">Chronograph</text>
+                <text id="tagline" x="0" y="-25" font-size="14" text-anchor="middle">Wave Master</text>
                 <line id="handHour" x1="0" y1="0" x2="0" y2="-130" class="hand hand-hour" />
                 <line id="handMinute" x1="0" y1="0" x2="0" y2="-200" class="hand hand-minute" />
                 <line id="handSecond" x1="0" y1="0" x2="0" y2="-230" class="hand hand-second" />
@@ -591,6 +625,17 @@
                 const statusEl = document.getElementById('statusLabel');
                 statusEl.classList.remove('status-on', 'status-off');
             }
+
+            // Hide/Show sub-dial numbers and adjust label positions based on mode
+            const isStatusMode = (state.mode === 'CD' || state.mode === 'AL' || state.mode === 'WT');
+            const subBottom = document.getElementById('subBottom');
+            if (subBottom) {
+                subBottom.classList.toggle('status-mode', isStatusMode);
+            }
+            const subBottomLabel = document.getElementById('subBottomLabel');
+            subBottomLabel.setAttribute('y', 11); // Increased from 5 to 11 for all modes
+            subBottomLabel.style.display = (state.mode === 'WT') ? 'none' : 'block';
+            document.getElementById('statusLabel').setAttribute('y', isStatusMode ? 31 : 25);
 
             requestAnimationFrame(tick);
         }
